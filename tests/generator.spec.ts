@@ -1,71 +1,60 @@
-import { test, expect, type Route } from '@playwright/test';
-import type { GeneratedName } from '../src/types';
-
-function mockResponse(name: GeneratedName) {
-  return (route: Route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        choices: [{ message: { content: JSON.stringify(name) } }],
-      }),
-    });
-}
+import { test, expect } from '@playwright/test';
 
 test('renders the first generated name on load', async ({ page }) => {
-  const name: GeneratedName = {
-    firstName: 'Bumblesnatch',
-    lastName: 'Cuddlefish',
-    funFact: 'Once mistook a hedgehog for a minor aristocrat.',
-  };
-  await page.route('**/v1/chat/completions', mockResponse(name));
+  await page.addInitScript(() => {
+    (window as Window & { __webLlmCheckWebGPU?: () => Promise<boolean>; __webLlmEngine?: unknown }).__webLlmCheckWebGPU = async () => true;
+    (window as Window & { __webLlmCheckWebGPU?: () => Promise<boolean>; __webLlmEngine?: unknown }).__webLlmEngine = {
+      chat: {
+        completions: {
+          create: async () => ({
+            choices: [{ message: { content: JSON.stringify({ firstName: 'Bumblesnatch', lastName: 'Cuddlefish', funFact: 'Once mistook a hedgehog for a minor aristocrat.' }) } }],
+          }),
+        },
+      },
+    };
+  });
 
   await page.goto('/');
-
-  await expect(page.locator('.card-name__first')).toHaveText(name.firstName);
-  await expect(page.locator('.card-name__last')).toHaveText(name.lastName);
-  await expect(page.locator('.card-name__fun-fact')).toHaveText(`"${name.funFact}"`);
+  await expect(page.locator('.card-name__first')).toHaveText('Bumblesnatch', { timeout: 15000 });
+  await expect(page.locator('.card-name__last')).toHaveText('Cuddlefish');
+  await expect(page.locator('.card-name__fun-fact')).toHaveText('"Once mistook a hedgehog for a minor aristocrat."');
   await expect(page.locator('#history-section')).toBeHidden();
 });
 
 test('clicking Generate pushes the previous name into history', async ({ page }) => {
-  const first: GeneratedName = {
-    firstName: 'Wafflebart',
-    lastName: 'Pondsworth',
-    funFact: 'Believes weather is a personal attack.',
-  };
-  const second: GeneratedName = {
-    firstName: 'Crumplewick',
-    lastName: 'Bogshank',
-    funFact: 'Invented a soup that defeated a duke.',
-  };
-
-  const responses: GeneratedName[] = [first, second];
-  await page.route('**/v1/chat/completions', (route) => {
-    const next = responses.shift() ?? second;
-    return mockResponse(next)(route);
+  await page.addInitScript(() => {
+    const names = [
+      { firstName: 'Bumblesnatch', lastName: 'Cuddlefish', funFact: 'Once mistook a hedgehog for a minor aristocrat.' },
+      { firstName: 'Wafflebart', lastName: 'Pondsworth', funFact: 'Believes weather is a personal attack.' },
+    ];
+    let count = 0;
+    (window as Window & { __webLlmCheckWebGPU?: () => Promise<boolean>; __webLlmEngine?: unknown }).__webLlmCheckWebGPU = async () => true;
+    (window as Window & { __webLlmCheckWebGPU?: () => Promise<boolean>; __webLlmEngine?: unknown }).__webLlmEngine = {
+      chat: {
+        completions: {
+          create: async () => ({ choices: [{ message: { content: JSON.stringify(names[count++ % 2]) } }] }),
+        },
+      },
+    };
   });
 
   await page.goto('/');
-  await expect(page.locator('.card-name__first')).toHaveText(first.firstName);
+  await expect(page.locator('.card-name__first')).toHaveText('Bumblesnatch', { timeout: 15000 });
 
   await page.locator('#generate-button').click();
-  await expect(page.locator('.card-name__first')).toHaveText(second.firstName);
+  await expect(page.locator('.card-name__first')).toHaveText('Wafflebart');
 
   const historyItem = page.locator('.history-item').first();
   await expect(historyItem).toBeVisible();
-  await expect(historyItem.locator('.history-item__first')).toHaveText(first.firstName);
-  await expect(historyItem.locator('.history-item__last')).toHaveText(first.lastName);
+  await expect(historyItem.locator('.history-item__first')).toHaveText('Bumblesnatch');
+  await expect(historyItem.locator('.history-item__last')).toHaveText('Cuddlefish');
 });
 
-test('shows the error banner when the LLM call fails', async ({ page }) => {
-  await page.route('**/v1/chat/completions', (route) =>
-    route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }),
-  );
+test('shows the error banner when WebGPU is not available', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as Window & { __webLlmCheckWebGPU?: () => Promise<boolean>; __webLlmEngine?: unknown }).__webLlmCheckWebGPU = async () => false;
+  });
 
   await page.goto('/');
-
-  await expect(page.locator('.card-error__message')).toHaveText(
-    'The name generation machine has temporarily jammed. Try again.',
-  );
+  await expect(page.locator('.card-error__message')).toContainText('WebGPU is not available');
 });

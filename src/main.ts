@@ -1,29 +1,32 @@
 import './styles.css';
-import { generateName } from './lib/nameGenerator';
+import { generateNameWithEngine, getOrCreateEngine, checkWebGPU } from './lib/nameGenerator';
 import { HISTORY_LIMIT } from './constants';
-import type { GeneratedName, LlmConfig } from './types';
+import type { GeneratedName } from './types';
 
 type FlipState = 'idle' | 'spinning' | 'revealing';
 
 type AppState = {
   name: GeneratedName | null;
   loading: boolean;
+  downloading: boolean;
+  modelProgress: number;
+  modelMsg: string;
   history: GeneratedName[];
   flipState: FlipState;
   error: string | null;
-};
-
-const config: LlmConfig = {
-  baseUrl: import.meta.env.VITE_LLM_BASE_URL ?? 'http://localhost:11434',
-  model: import.meta.env.VITE_LLM_MODEL ?? 'llama3.1',
+  webgpuAvailable: boolean;
 };
 
 const state: AppState = {
   name: null,
   loading: false,
+  downloading: false,
+  modelProgress: 0,
+  modelMsg: '',
   history: [],
   flipState: 'idle',
   error: null,
+  webgpuAvailable: true,
 };
 
 const card = document.getElementById('card') as HTMLDivElement;
@@ -42,6 +45,29 @@ function renderCard(): void {
   card.classList.add(`is-${state.flipState}`);
 
   cardBody.replaceChildren();
+
+  if (!state.webgpuAvailable) {
+    const node = tplError.content.cloneNode(true) as DocumentFragment;
+    const message = node.querySelector('.card-error__message') as HTMLParagraphElement;
+    message.textContent = 'WebGPU is not available. Please use a WebGPU-enabled browser (Chrome, Edge, or Firefox with WebGPU enabled).';
+    cardBody.append(node);
+    return;
+  }
+
+  if (state.downloading) {
+    const node = tplLoading.content.cloneNode(true) as DocumentFragment;
+    const spinner = node.querySelector('.spinner') as HTMLElement;
+    const msg = document.createElement('p');
+    msg.className = 'download-msg';
+    msg.textContent = state.modelMsg || `Downloading model... ${state.modelProgress}%`;
+    if (spinner) {
+      spinner.insertAdjacentElement('afterend', msg);
+    } else {
+      cardBody.append(msg);
+    }
+    cardBody.append(node);
+    return;
+  }
 
   if (state.loading && !state.name) {
     cardBody.append(tplLoading.content.cloneNode(true));
@@ -66,8 +92,14 @@ function renderCard(): void {
 }
 
 function renderButton(): void {
-  button.disabled = state.loading;
-  button.textContent = state.loading ? 'Generating…' : '✦ Generate Name ✦';
+  button.disabled = state.loading || state.downloading || !state.webgpuAvailable;
+  if (state.downloading) {
+    button.textContent = 'Downloading model...';
+  } else if (state.loading) {
+    button.textContent = 'Generating...';
+  } else {
+    button.textContent = '✦ Generate Name ✦';
+  }
 }
 
 function renderHistory(): void {
@@ -95,14 +127,23 @@ function nextPaint(): Promise<void> {
 }
 
 async function requestName(): Promise<void> {
-  if (state.loading) return;
+  if (state.loading || state.downloading) return;
+
   state.loading = true;
   state.error = null;
   state.flipState = 'spinning';
   render();
 
   try {
-    const generated = await generateName(config);
+    const engine = await getOrCreateEngine((progress, msg) => {
+      state.modelProgress = progress;
+      state.modelMsg = msg;
+      render();
+    });
+
+    await nextPaint();
+
+    const generated = await generateNameWithEngine(engine);
 
     state.flipState = 'revealing';
     render();
@@ -124,9 +165,38 @@ async function requestName(): Promise<void> {
   }
 }
 
+async function init(): Promise<void> {
+  state.webgpuAvailable = await checkWebGPU();
+
+  if (!state.webgpuAvailable) {
+    state.error = 'WebGPU is not available. Please use a WebGPU-enabled browser.';
+    render();
+    return;
+  }
+
+  state.downloading = true;
+  render();
+
+  try {
+    await getOrCreateEngine((progress, msg) => {
+      state.modelProgress = progress;
+      state.modelMsg = msg;
+      render();
+    });
+    state.downloading = false;
+    render();
+    await requestName();
+  } catch (err) {
+    state.downloading = false;
+    state.error = 'Failed to load model. Please refresh and try again.';
+    console.error(err);
+    render();
+  }
+}
+
 button.addEventListener('click', () => {
   void requestName();
 });
 
 render();
-void requestName();
+void init();
