@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Benedict Cumberbatch Name Generator</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <div class="app-backdrop" aria-hidden="true"></div>
+
+      <header class="header">
+        <div class="eyebrow">✦ Established 1976, Hammersmith ✦</div>
+        <h1 class="title">The Benedict Cumberbatch</h1>
+        <h2 class="subtitle">Name Generator</h2>
+        <div class="divider divider--wide"></div>
+        <p class="tagline">Purveyors of Absurd Names Since the Victorian Era</p>
+      </header>
+
+      <div class="card-frame">
+        <div id="card" class="card is-idle">
+          <span class="card-corner card-corner--tl"></span>
+          <span class="card-corner card-corner--tr"></span>
+          <span class="card-corner card-corner--bl"></span>
+          <span class="card-corner card-corner--br"></span>
+          <div id="card-body" class="card-body"></div>
+        </div>
+      </div>
+
+      <button id="generate-button" class="generate-button" type="button">
+        ✦ Generate Name ✦
+      </button>
+
+      <section id="history-section" class="history-section" hidden>
+        <div class="history-heading">Previously Minted Names</div>
+        <div id="history" class="history"></div>
+      </section>
+
+      <footer class="footer">
+        ✦ NO ACTUAL BENEDICTS WERE HARMED IN THE MAKING OF THIS APP ✦
+      </footer>
+    </div>
+
+    <template id="tpl-loading">
+      <div class="card-loading">
+        <p>Consulting the Registry of Ridiculous Names…</p>
+      </div>
+    </template>
+
+    <template id="tpl-error">
+      <div class="card-error">
+        <div class="card-error__icon">⚙️</div>
+        <p class="card-error__message"></p>
+      </div>
+    </template>
+
+    <template id="tpl-name">
+      <div class="card-name__first"></div>
+      <div class="card-name__last"></div>
+      <div class="divider divider--narrow"></div>
+      <p class="card-name__fun-fact"></p>
+    </template>
+
+    <template id="tpl-history-item">
+      <div class="history-item">
+        <span class="history-item__name">
+          <span class="history-item__first"></span>
+          <span class="history-item__last"></span>
+        </span>
+      </div>
+    </template>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
