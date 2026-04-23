@@ -18,4 +18,10 @@ Respond ONLY with a JSON object, no markdown, no explanation:
 
 Where:
 
-- `funFact`: a single absurd, deadpan sentence about this person (e.g. "Once won a staring contest with a turnip.").
+- `funFact`: a single absurd, deadpan sentence about this person. Invent a fresh one every time — NEVER reuse any of these exact examples. Examples (for tone only, do not copy):
+  - "Once won a staring contest with a turnip."
+  - "Believes pigeons are tax collectors in disguise."
+  - "Has never forgiven a particular church bell."
+  - "Invented a soup that briefly defeated a duke."
+  - "Keeps a ledger of every cloud he has mistrusted."
+  - "Refuses to acknowledge Wednesdays on principle."
