@@ -1,6 +1,6 @@
 # The Benedict Cumberbatch Name Generator
 
-> Based on [benedictcumberbatchgenerator.tumblr.com](http://benedictcumberbatchgenerator.tumblr.com)
+> Based on [benedictcumberbatchgenerator.tumblr.com](http://benedictcumberbatchgenerator.tumblr.com) and many others.
 
 A Victorian-aesthetic name generator that produces absurd, pompous, almost-plausible British names in the spirit of *Benedict Cumberbatch*. Each name comes with a deadpan fun fact about its bearer.
 
@@ -13,8 +13,6 @@ Front-end only. Talks to a **local LLM via [Ollama](https://ollama.com)** — no
 - **Vite** (vanilla TS template) — dev server and production bundler
 - **TypeScript**
 - **Ollama** — any local model exposed through Ollama's OpenAI-compatible endpoint
-- **Playwright** — smoke tests with the LLM call mocked
-- **ESLint** + `.editorconfig`
 
 ---
 
