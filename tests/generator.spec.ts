@@ -6,9 +6,7 @@ function mockResponse(name: GeneratedName) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
-        choices: [{ message: { content: JSON.stringify(name) } }],
-      }),
+      body: JSON.stringify(name),
     });
 }
 
@@ -18,7 +16,7 @@ test('renders the first generated name on load', async ({ page }) => {
     lastName: 'Cuddlefish',
     funFact: 'Once mistook a hedgehog for a minor aristocrat.',
   };
-  await page.route('**/v1/chat/completions', mockResponse(name));
+  await page.route('**/api/generate', mockResponse(name));
 
   await page.goto('/');
 
@@ -41,7 +39,7 @@ test('clicking Generate pushes the previous name into history', async ({ page })
   };
 
   const responses: GeneratedName[] = [first, second];
-  await page.route('**/v1/chat/completions', (route) => {
+  await page.route('**/api/generate', (route) => {
     const next = responses.shift() ?? second;
     return mockResponse(next)(route);
   });
@@ -58,9 +56,13 @@ test('clicking Generate pushes the previous name into history', async ({ page })
   await expect(historyItem.locator('.history-item__last')).toHaveText(first.lastName);
 });
 
-test('shows the error banner when the LLM call fails', async ({ page }) => {
-  await page.route('**/v1/chat/completions', (route) =>
-    route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }),
+test('shows the error banner when the backend call fails', async ({ page }) => {
+  await page.route('**/api/generate', (route) =>
+    route.fulfill({
+      status: 502,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'LLM returned status 500' }),
+    }),
   );
 
   await page.goto('/');

@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:vercel": "vercel dev",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" \"api/**/*.ts\" \"lib/**/*.ts\"",
     "test": "playwright test",
     "test:ui": "playwright test --ui"
   },
@@ -17,8 +18,10 @@
     "@types/node": "^25.6.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
+    "@vercel/node": "^5.7.13",
     "eslint": "^8.57.0",
     "typescript": "^5.5.0",
+    "vercel": "^52.0.0",
     "vite": "^5.4.0"
   }
 }
