@@ -1,7 +1,7 @@
 import './styles.css';
 import { generateName } from './lib/nameGenerator';
 import { HISTORY_LIMIT } from './constants';
-import type { GeneratedName, LlmConfig } from './types';
+import type { GeneratedName } from './types';
 
 type FlipState = 'idle' | 'spinning' | 'revealing';
 
@@ -11,11 +11,6 @@ type AppState = {
   history: GeneratedName[];
   flipState: FlipState;
   error: string | null;
-};
-
-const config: LlmConfig = {
-  baseUrl: import.meta.env.VITE_LLM_BASE_URL ?? 'http://localhost:11434',
-  model: import.meta.env.VITE_LLM_MODEL ?? 'llama3.1',
 };
 
 const state: AppState = {
@@ -102,7 +97,7 @@ async function requestName(): Promise<void> {
   render();
 
   try {
-    const generated = await generateName(config);
+    const generated = await generateName();
 
     state.flipState = 'revealing';
     render();
