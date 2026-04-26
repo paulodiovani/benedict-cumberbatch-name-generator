@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" \"api/**/*.ts\" \"lib/**/*.ts\"",
-    "test": "playwright test",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "vitest run tests/unit",
+    "test:e2e": "playwright test",
     "test:ui": "playwright test --ui"
   },
   "devDependencies": {
@@ -22,6 +24,7 @@
     "eslint": "^8.57.0",
     "typescript": "^5.5.0",
     "vercel": "^52.0.0",
-    "vite": "^5.4.0"
+    "vite": "^5.4.0",
+    "vitest": "^4.1.5"
   }
 }
