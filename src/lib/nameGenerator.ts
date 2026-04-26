@@ -1,4 +1,4 @@
-import { FIRST_NAME_POOLS, LAST_NAME_POOLS, SYSTEM_PROMPT } from '../constants';
+import { FIRST_NAMES, FUN_FACTS, LAST_NAMES, SYSTEM_PROMPT } from '../constants';
 import type { GeneratedName, LlmConfig } from '../types';
 
 function pickRandom<T>(arr: T[]): T {
@@ -6,9 +6,13 @@ function pickRandom<T>(arr: T[]): T {
 }
 
 export function buildSeedHint(): string {
-  const firstName = pickRandom(pickRandom(FIRST_NAME_POOLS));
-  const lastName = pickRandom(pickRandom(LAST_NAME_POOLS));
-  return `For inspiration this time, consider names in the spirit of "${firstName}" and "${lastName}" — but feel free to invent something entirely different and more surprising. Do NOT use those exact names.`;
+  const firstName = pickRandom(FIRST_NAMES);
+  const lastName = pickRandom(LAST_NAMES);
+  const funFact = pickRandom(FUN_FACTS);
+  return [
+    `For inspiration this time, consider names in the spirit of "${firstName}" and "${lastName}" — but feel free to invent something entirely different and more surprising.`,
+    `For tone, take a fun fact like "${funFact}" as a starting point — then reach for something stranger and more unexpected of your own.`,
+  ].join(' ');
 }
 
 type GenerateOptions = LlmConfig & { signal?: AbortSignal };
