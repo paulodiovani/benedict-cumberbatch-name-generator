@@ -26,7 +26,7 @@ function makeReq(method: string): VercelRequest {
 }
 
 function makeRes(): { res: VercelResponse; status: number | null; body: unknown } {
-  const ctx = { status: null as number | null, body: undefined as unknown };
+  const ctx = { res: null as unknown as VercelResponse, status: null as number | null, body: undefined as unknown };
   const json = vi.fn((data: unknown) => { ctx.body = data; return ctx.res; });
   const statusFn = vi.fn((code: number) => { ctx.status = code; return { json }; });
   ctx.res = { status: statusFn, json } as unknown as VercelResponse;
