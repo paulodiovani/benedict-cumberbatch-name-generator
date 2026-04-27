@@ -1,5 +1,5 @@
 import { test, expect, type Route } from '@playwright/test';
-import type { GeneratedName } from '../src/types';
+import type { GeneratedName } from '../../src/types';
 
 function mockResponse(name: GeneratedName) {
   return (route: Route) =>
