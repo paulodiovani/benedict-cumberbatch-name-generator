@@ -1,9 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
-const here = dirname(fileURLToPath(import.meta.url));
-const SYSTEM_PROMPT = readFileSync(join(here, 'prompts/default.md'), 'utf8');
+const SYSTEM_PROMPT = readFileSync(join(__dirname, 'prompts/default.md'), 'utf8');
 
 export function buildSystemPrompt(): string {
   return SYSTEM_PROMPT;
