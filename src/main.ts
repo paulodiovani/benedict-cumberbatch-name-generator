@@ -11,6 +11,8 @@ type AppState = {
   history: GeneratedName[];
   flipState: FlipState;
   error: string | null;
+  waitMessage: string | null;
+  canRetry: boolean;
 };
 
 const state: AppState = {
@@ -19,7 +21,18 @@ const state: AppState = {
   history: [],
   flipState: 'idle',
   error: null,
+  waitMessage: null,
+  canRetry: false,
 };
+
+let controller: AbortController | null = null;
+let waitTimers: ReturnType<typeof setTimeout>[] = [];
+let pendingRetry = false;
+
+function clearWaitTimers() {
+  waitTimers.forEach(clearTimeout);
+  waitTimers = [];
+}
 
 const card = document.getElementById('card') as HTMLDivElement;
 const cardBody = document.getElementById('card-body') as HTMLDivElement;
@@ -61,8 +74,16 @@ function renderCard(): void {
 }
 
 function renderButton(): void {
-  button.disabled = state.loading;
-  button.textContent = state.loading ? 'Generating…' : '✦ Generate Name ✦';
+  if (state.loading && !state.canRetry) {
+    button.disabled = true;
+    button.textContent = state.waitMessage ?? 'Generating…';
+  } else if (state.loading && state.canRetry) {
+    button.disabled = false;
+    button.textContent = state.waitMessage ?? 'Perhaps just try again.';
+  } else {
+    button.disabled = false;
+    button.textContent = '✦ Generate Name ✦';
+  }
 }
 
 function renderHistory(): void {
@@ -93,11 +114,31 @@ async function requestName(): Promise<void> {
   if (state.loading) return;
   state.loading = true;
   state.error = null;
+  state.waitMessage = null;
+  state.canRetry = false;
   state.flipState = 'spinning';
   render();
 
+  controller = new AbortController();
+
+  const waitSchedule: [number, string][] = [
+    [4_000, 'A moment more, if you please…'],
+    [10_000, 'Still consulting the registry…'],
+    [18_000, 'The scribes are being rather thorough…'],
+    [25_000, 'Patience, dear visitor — a name will come…'],
+    [30_000, 'Perhaps just try again.'],
+  ];
+
+  for (const [delay, msg] of waitSchedule) {
+    waitTimers.push(setTimeout(() => {
+      state.waitMessage = msg;
+      if (delay >= 30_000) state.canRetry = true;
+      render();
+    }, delay));
+  }
+
   try {
-    const generated = await generateName();
+    const generated = await generateName(controller.signal);
 
     state.flipState = 'revealing';
     render();
@@ -110,17 +151,34 @@ async function requestName(): Promise<void> {
 
     state.flipState = 'idle';
   } catch (err) {
-    console.error(err);
-    state.flipState = 'idle';
-    state.error = 'The name generation machine has temporarily jammed. Try again.';
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      state.flipState = 'idle';
+    } else {
+      console.error(err);
+      state.flipState = 'idle';
+      state.error = 'The name generation machine has temporarily jammed. Try again.';
+    }
   } finally {
+    clearWaitTimers();
     state.loading = false;
+    state.waitMessage = null;
+    state.canRetry = false;
+    controller = null;
     render();
+    if (pendingRetry) {
+      pendingRetry = false;
+      void requestName();
+    }
   }
 }
 
 button.addEventListener('click', () => {
-  void requestName();
+  if (state.canRetry) {
+    pendingRetry = true;
+    controller?.abort();
+  } else {
+    void requestName();
+  }
 });
 
 render();
