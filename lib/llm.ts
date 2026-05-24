@@ -28,6 +28,7 @@ export async function generate(): Promise<GeneratedName> {
       headers,
       body: JSON.stringify({
         model,
+        service_tier: 'flex', // Amazon bedrock flex tier has 50% discount
         stream: false,
         response_format: { type: 'json_object' },
         messages: [
