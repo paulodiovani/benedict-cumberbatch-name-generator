@@ -29,6 +29,8 @@ response = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
       body: JSON.stringify({
         model,
         service_tier: 'flex', // Amazon bedrock flex tier has 50% discount
+        temperature: 1,
+        top_p: 1,
         stream: false,
         response_format: { type: 'json_object' },
         messages: [
