@@ -4,12 +4,9 @@ import { generate, mapError, LlmError } from '../../lib/llm';
 // lib/prompt.ts reads a file at module load time — stub it out
 vi.mock('../../lib/prompt', () => ({
   buildSystemPrompt: () => 'system prompt',
-  buildUserPrompt: (hint: string) => `user prompt ${hint}`,
+  buildUserPrompt: () => 'user prompt',
 }));
-
-vi.mock('../../lib/seeds', () => ({
-  buildSeedHint: () => 'seed hint',
-}));
+vi.mock('../../lib/seeds', () => ({}));
 
 function makeLlmResponse(content: string, status = 200): Response {
   return new Response(
