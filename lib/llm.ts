@@ -23,7 +23,7 @@ export async function generate(): Promise<GeneratedName> {
 
   let response: Response;
   try {
-    response = await fetch(`${baseUrl.replace(/\/$/, '')}/v1/chat/completions`, {
+response = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
       headers,
       body: JSON.stringify({

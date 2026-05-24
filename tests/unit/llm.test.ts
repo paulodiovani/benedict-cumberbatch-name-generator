@@ -47,7 +47,7 @@ describe('generate()', () => {
     await generate();
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('https://llm.example.com/v1/chat/completions');
+    expect(url).toBe('https://llm.example.com/chat/completions');
     expect((init.headers as Record<string, string>)['Authorization']).toBe('Bearer test-key');
   });
 
@@ -59,7 +59,7 @@ describe('generate()', () => {
     await generate();
 
     const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('https://llm.example.com/v1/chat/completions');
+    expect(url).toBe('https://llm.example.com/chat/completions');
   });
 
   it('omits Authorization header when LLM_API_KEY is not set', async () => {

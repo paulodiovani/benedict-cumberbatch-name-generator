@@ -41,14 +41,14 @@ Edit `.env` with your LLM credentials (these are server-side only, never bundled
 
 **Local (Ollama):**
 ```
-LLM_BASE_URL=http://localhost:11434
+LLM_BASE_URL=http://localhost:11434/v1
 LLM_MODEL=llama3.1
 LLM_API_KEY=
 ```
 
 **Cloud (Groq, OpenAI, etc.):**
 ```
-LLM_BASE_URL=https://api.groq.com/openai
+LLM_BASE_URL=https://api.groq.com/openai/v1
 LLM_MODEL=llama-3.3-70b-versatile
 LLM_API_KEY=gsk_your_api_key_here
 ```
