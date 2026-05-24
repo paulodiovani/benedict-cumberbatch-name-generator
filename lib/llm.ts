@@ -10,9 +10,12 @@ export class LlmError extends Error {
 }
 
 export async function generate(): Promise<GeneratedName> {
-  const baseUrl = process.env.LLM_BASE_URL;
-  const model = process.env.LLM_MODEL;
-  const apiKey = process.env.LLM_API_KEY;
+  const baseUrl = process.env.OPENAI_BASE_URL;
+  const model = process.env.OPENAI_MODEL;
+  const apiKey = process.env.OPENAI_API_KEY;
+  const temperature = parseFloat(process.env.OPENAI_TEMPERATURE ?? '1');
+  const topP = parseFloat(process.env.OPENAI_TOP_P ?? '1');
+  const serviceTier = process.env.OPENAI_SERVICE_TIER;
 
   if (!baseUrl || !model) {
     throw new LlmError(500, 'LLM is not configured');
@@ -23,14 +26,14 @@ export async function generate(): Promise<GeneratedName> {
 
   let response: Response;
   try {
-response = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
+    response = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
         model,
-        service_tier: 'flex', // Amazon bedrock flex tier has 50% discount
-        temperature: 1,
-        top_p: 1,
+        ...(serviceTier ? { service_tier: serviceTier } : {}),
+        temperature,
+        top_p: topP,
         stream: false,
         response_format: { type: 'json_object' },
         messages: [

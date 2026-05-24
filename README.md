@@ -41,16 +41,23 @@ Edit `.env` with your LLM credentials (these are server-side only, never bundled
 
 **Local (Ollama):**
 ```
-LLM_BASE_URL=http://localhost:11434/v1
-LLM_MODEL=llama3.1
-LLM_API_KEY=
+OPENAI_BASE_URL=http://localhost:11434/v1
+OPENAI_MODEL=llama3.1
+OPENAI_API_KEY=
 ```
 
 **Cloud (Groq, OpenAI, etc.):**
 ```
-LLM_BASE_URL=https://api.groq.com/openai/v1
-LLM_MODEL=llama-3.3-70b-versatile
-LLM_API_KEY=gsk_your_api_key_here
+OPENAI_BASE_URL=https://api.groq.com/openai/v1
+OPENAI_MODEL=llama-3.3-70b-versatile
+OPENAI_API_KEY=gsk_your_api_key_here
+```
+
+**Optional parameters:**
+```
+OPENAI_TEMPERATURE=1   # 0.0 to 2.0 — higher = more creative
+OPENAI_TOP_P=1         # 0.0 to 1.0 — lower = more focused
+OPENAI_SERVICE_TIER=flex  # Amazon Bedrock flex tier for 50% discount
 ```
 
 Then restart `npm run dev:vercel`. Any OpenAI-compatible endpoint will work.
@@ -77,7 +84,7 @@ Single project, auto-detected by Vercel:
 - `src/` → Vite build into `dist/` (static frontend)
 - `api/*.ts` → bundled as serverless functions
 
-Set `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY` in the Vercel dashboard (Production + Preview). One `git push` deploys both frontend and backend.
+Set `OPENAI_BASE_URL`, `OPENAI_MODEL`, `OPENAI_API_KEY` (and optional `OPENAI_TEMPERATURE`, `OPENAI_TOP_P`, `OPENAI_SERVICE_TIER`) in the Vercel dashboard (Production + Preview). One `git push` deploys both frontend and backend.
 
 For other static hosts, see notes below.
 

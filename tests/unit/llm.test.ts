@@ -22,9 +22,9 @@ const validName = { firstName: 'Percival', lastName: 'Crumplehorn', funFact: 'On
 
 describe('generate()', () => {
   beforeEach(() => {
-    vi.stubEnv('LLM_BASE_URL', 'https://llm.example.com');
-    vi.stubEnv('LLM_MODEL', 'test-model');
-    vi.stubEnv('LLM_API_KEY', 'test-key');
+    vi.stubEnv('OPENAI_BASE_URL', 'https://llm.example.com');
+    vi.stubEnv('OPENAI_MODEL', 'test-model');
+    vi.stubEnv('OPENAI_API_KEY', 'test-key');
   });
 
   afterEach(() => {
@@ -51,8 +51,8 @@ describe('generate()', () => {
     expect((init.headers as Record<string, string>)['Authorization']).toBe('Bearer test-key');
   });
 
-  it('strips trailing slash from LLM_BASE_URL', async () => {
-    vi.stubEnv('LLM_BASE_URL', 'https://llm.example.com/');
+  it('strips trailing slash from OPENAI_BASE_URL', async () => {
+    vi.stubEnv('OPENAI_BASE_URL', 'https://llm.example.com/');
     const fetchMock = vi.fn().mockResolvedValue(makeLlmResponse(JSON.stringify(validName)));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -62,8 +62,8 @@ describe('generate()', () => {
     expect(url).toBe('https://llm.example.com/chat/completions');
   });
 
-  it('omits Authorization header when LLM_API_KEY is not set', async () => {
-    vi.stubEnv('LLM_API_KEY', '');
+  it('omits Authorization header when OPENAI_API_KEY is not set', async () => {
+    vi.stubEnv('OPENAI_API_KEY', '');
     const fetchMock = vi.fn().mockResolvedValue(makeLlmResponse(JSON.stringify(validName)));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -73,14 +73,14 @@ describe('generate()', () => {
     expect((init.headers as Record<string, string>)['Authorization']).toBeUndefined();
   });
 
-  it('throws LlmError(500) when LLM_BASE_URL is missing', async () => {
-    vi.stubEnv('LLM_BASE_URL', '');
+  it('throws LlmError(500) when OPENAI_BASE_URL is missing', async () => {
+    vi.stubEnv('OPENAI_BASE_URL', '');
 
     await expect(generate()).rejects.toMatchObject({ status: 500, message: 'LLM is not configured' });
   });
 
-  it('throws LlmError(500) when LLM_MODEL is missing', async () => {
-    vi.stubEnv('LLM_MODEL', '');
+  it('throws LlmError(500) when OPENAI_MODEL is missing', async () => {
+    vi.stubEnv('OPENAI_MODEL', '');
 
     await expect(generate()).rejects.toMatchObject({ status: 500, message: 'LLM is not configured' });
   });
