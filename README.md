@@ -110,7 +110,6 @@ Note: the frontend will still need a backend to call `/api/generate`. Either:
 ├── lib/                     # backend helpers (imported by api/generate.ts)
 │   ├── llm.ts               # fetch upstream + error mapping
 │   ├── prompt.ts            # buildSystemPrompt(), buildUserPrompt()
-│   ├── seeds.ts             # FIRST_NAMES / LAST_NAMES / FUN_FACTS + buildSeedHint()
 │   ├── types.ts             # GeneratedName (backend copy)
 │   └── prompts/default.md   # system prompt asset, read via fs.readFileSync
 ├── src/                     # frontend (vanilla TS, no framework)
