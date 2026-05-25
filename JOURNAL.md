@@ -67,7 +67,7 @@ I tried four full prompt rewrites against `qwen2.5:1.5b`, three generations each
 
 I also briefly tried switching the output format from JSON to pipe-separated values, on the theory that the smaller models would have an easier time. They did not. The format was never the bottleneck. The model was.
 
-The conclusion, after a day of this: there is no sub-2B model that does this task well, regardless of prompting or output format. The task _looks_ trivial — write two words and a sentence — but it actually requires stylistic judgement (what counts as "absurd but almost believable"), and that judgement seems to live above some parameter-count threshold I was not going to cross with a 1.5B model.
+The conclusion, after a day of this: there is no sub-2B model that does this task well, regardless of prompting or output format. The task _looks_ trivial — write two words and a sentence — but it actually requires stylistic judgment (what counts as "absurd but almost believable"), and that judgment seems to live above some parameter-count threshold I was not going to cross with a 1.5B model.
 
 I left the prompt as the original `default.md` and walked away from the small-model rabbit hole.
 
@@ -126,22 +126,32 @@ A few small details from the refactor that I am happy with:
 - The seeds pattern in `lib/seeds.ts` picks random examples from `FIRST_NAMES` / `LAST_NAMES` / `FUN_FACTS` pools and embeds them in the user message _as inspiration_, with explicit instructions to invent something different. The pools nudge variety; they are not meant to be echoed verbatim. Editing the pools shifts the distribution of generations.
 - The frontend treats every non-200 response as a single generic "machine jammed" error. The JSON `message` from the backend is still in `response.json()` for DevTools debugging, but the user never sees the upstream's specific complaint. This keeps the Victorian conceit intact.
 
+## Round 6: The Temperature Trick
+
+While the seed pools provided a helpful nudge, I started to wonder if they were simply masking a lack of native creativity in the models. I decided to try a different approach: remove the seeds entirely and see if a larger model, paired with more aggressive sampling parameters, could produce the same variety on its own.
+
+I spent some time refining the model choice and parameters. I noticed a clear divide: larger models delivered the desired variety without needing seeds, while smaller models didn't seem to benefit from them much anyway.
+
+My goal was to find a "sweet spot" model—something like `gemma3:4b`. It's large enough to be capable but small enough to be extremely cheap on providers like Amazon Bedrock. However, initially, `gemma3:4b` was stubbornly repetitive, churning out a surprising number of "Silvanus Quillsworths".
+
+The breakthrough wasn't in the prompt, but in the parameters. By cranking up the `temperature` and `top_p`, I was able to inject the necessary "creativity" into the output. For `gemma3:4b`, setting the temperature to `2` worked wonders. It hit that delicate balance: the names and fun facts became wonderfully absurd and fresh, yet the JSON structure remained perfectly deterministic.
+
 ## Conclusion and Caveats
 
 What started as a one-shot claude.ai sketch ended up as a small but proper web app, after a long detour through the lower end of the open-model ecosystem.
 
-If I had to extract one lesson from the whole thing, it is this: do not try to outsmart the parameter count. There is a real floor for "creative voice + format compliance", and prompt-engineering tricks do not lower it. Pick a model that can do the task, and your prompt gets to be a few clean paragraphs of markdown.
+If I had to extract one lesson from the whole thing, it is this: do not try to outsmart the parameter count. There is a real floor for "creative voice + format compliance", and prompt-engineering tricks do not lower it. However, once you're above that floor, the right sampling parameters (like temperature) can be the difference between a repetitive machine and a genuine source of absurdity. Pick a model that can do the task, tune the temperature, and your prompt gets to be a few clean paragraphs of markdown.
 
 A few caveats worth naming, though…
 
-- The seed pools in `lib/seeds.ts` are doing more work than they look like. Pure prompt + pure model produces a lot of repetition over a session. The random hints are what keep generations feeling fresh.
 - The `feature/webllm` branch is still there. I have not deleted it, on the off chance that browser-side models become genuinely viable for this task in a year or two. If you are reading this and a 2B-ish model now nails it in a 100MB WebGPU bundle, please open a PR.
 - The `GeneratedName` type is duplicated across `src/types.ts` and `lib/types.ts`. It is one three-field interface. Introducing a `shared/` folder for one type would be more ceremony than the duplication costs.
 
-The whole repo is around a thousand lines of code, three env vars, and one markdown prompt. That feels about right for what it is — a generator of pompous Victorian names that nobody actually needs. ✦
+The whole repo is around a thousand lines of code, six env vars, and one markdown prompt. That feels about right for what it is — a generator of pompous Victorian names that nobody actually needs. ✦
 
 ## Appendix: timeline
 
 - **Apr 23** — Initial claude.ai artifact (React, Anthropic API, Claude Haiku). Rewrite as Vite + vanilla TS. First Ollama experiments. Prompt iteration against `qwen2.5:1.5b`. WIP `feature/webllm` branch.
 - **Apr 26** — `qwen2.5:14b` confirmed as the working local model. Refactor as a Vercel app with `api/` + `lib/` split. Backend unit tests. Build and deploy fixes.
 - **Apr 27** — Polish: better user feedback, OG image, favicon. This journal.
+- **May 24** — Polished environment variables, refined model parameters, and removed seed pools.
