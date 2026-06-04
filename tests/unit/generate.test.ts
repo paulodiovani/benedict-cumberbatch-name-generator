@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { LlmError } from '../../lib/llm';
 
 vi.mock('../../lib/llm', () => ({
@@ -21,15 +21,15 @@ import handler from '../../api/generate';
 const generateMock = vi.mocked(generate);
 const mapErrorMock = vi.mocked(mapError);
 
-function makeReq(method: string): VercelRequest {
-  return { method } as VercelRequest;
+function makeReq(method: string): IncomingMessage {
+  return { method } as IncomingMessage;
 }
 
-function makeRes(): { res: VercelResponse; status: number | null; body: unknown } {
-  const ctx = { res: null as unknown as VercelResponse, status: null as number | null, body: undefined as unknown };
-  const json = vi.fn((data: unknown) => { ctx.body = data; return ctx.res; });
-  const statusFn = vi.fn((code: number) => { ctx.status = code; return { json }; });
-  ctx.res = { status: statusFn, json } as unknown as VercelResponse;
+function makeRes(): { res: ServerResponse; status: number | null; body: unknown; headers: Record<string, string> } {
+  const ctx = { res: null as unknown as ServerResponse, status: null as number | null, body: undefined as unknown, headers: {} as Record<string, string> };
+  const end = vi.fn((data: string) => { ctx.body = JSON.parse(data); return ctx.res; });
+  const writeHead = vi.fn((code: number, hdrs: Record<string, string>) => { ctx.status = code; Object.assign(ctx.headers, hdrs); return ctx.res; });
+  ctx.res = { writeHead, end } as unknown as ServerResponse;
   return ctx;
 }
 

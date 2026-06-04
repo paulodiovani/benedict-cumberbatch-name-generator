@@ -1,0 +1,17 @@
+node_modules/
+dist/
+dist-server/
+.git/
+.github/
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+tests/
+.DS_Store
+*.log
+.vercel/
+Session.vim
+.claude/
+.codecompanion/

@@ -60,7 +60,7 @@ export async function generate(): Promise<GeneratedName> {
 
   let data: { choices?: Array<{ message?: { content?: string } }> };
   try {
-    data = await response.json();
+    data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
   } catch (err) {
     throw new LlmError(502, "LLM returned malformed JSON envelope", {
       cause: err,

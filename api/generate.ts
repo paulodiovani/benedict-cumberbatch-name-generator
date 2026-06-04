@@ -1,16 +1,19 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { generate, mapError } from '../lib/llm';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ message: 'Method not allowed' }));
   }
   try {
     const name = await generate();
-    return res.status(200).json(name);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(name));
   } catch (err) {
     console.error('[api/generate]', err);
     const { status, message } = mapError(err);
-    return res.status(status).json({ message });
+    res.writeHead(status, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ message }));
   }
 }

@@ -1,3 +1,12 @@
+---
+title: Benedict Cumberbatch Name Generator
+emoji: ✦
+colorFrom: sepia
+colorTo: gray
+sdk: docker
+app_port: 7860
+---
+
 # The Benedict Cumberbatch Name Generator
 
 > Based on [benedictcumberbatchgenerator.tumblr.com](http://benedictcumberbatchgenerator.tumblr.com) and many others.
@@ -27,13 +36,27 @@ Vite SPA frontend + a single Vercel Serverless Function backend. Talks to any **
 
 ## Getting started
 
+### With Docker (recommended)
+
+```bash
+cp .env.example .env
+# edit .env with your LLM credentials
+docker compose up --build
+```
+
+Open <http://localhost:7860>.
+
+### Without Docker
+
 ```bash
 npm install
 cp .env.example .env
-npm run dev:vercel
+# edit .env with your LLM credentials
+npm run build
+npm run start
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:7860>.
 
 ### Configuring the LLM
 
@@ -60,7 +83,7 @@ OPENAI_TOP_P=1         # 0.0 to 1.0 — lower = more focused
 OPENAI_SERVICE_TIER=flex  # Amazon Bedrock flex tier for 50% discount
 ```
 
-Then restart `npm run dev:vercel`. Any OpenAI-compatible endpoint will work.
+Then restart the server. Any OpenAI-compatible endpoint will work.
 
 ---
 
@@ -69,8 +92,10 @@ Then restart `npm run dev:vercel`. Any OpenAI-compatible endpoint will work.
 | Command            | Purpose                                                                      |
 |--------------------|----------------------------------------------------------------------|
 | `npm run dev`      | Vite dev server on `:5173` (frontend only — `/api/generate` returns 404) |
-| `npm run dev:vercel` | `vercel dev` — Vite + serverless functions on one port (mirrors production) |
-| `npm run build`    | `tsc --noEmit` then Vite build into `dist/`                          |
+| `npm run build`    | Type check, Vite build, and compile server into `dist/` + `dist-server/` |
+| `npm run build:frontend` | Type check and Vite build into `dist/`                          |
+| `npm run build:server` | Compile server.ts + lib/ into `dist-server/`                     |
+| `npm run start`    | Run the compiled server on port 7860                                 |
 | `npm run typecheck` | Type check only (covers `src/`, `api/`, `lib/`, `tests/`)             |
 | `npm run lint`     | ESLint over `src/`, `tests/`, `api/`, `lib/`                        |
 | `npm test`         | Run Playwright tests (`/api/generate` is mocked per test)            |
@@ -78,27 +103,26 @@ Then restart `npm run dev:vercel`. Any OpenAI-compatible endpoint will work.
 
 ---
 
-## Deployment (Vercel)
+## Deployment
 
-Single project, auto-detected by Vercel:
-- `src/` → Vite build into `dist/` (static frontend)
-- `api/*.ts` → bundled as serverless functions
+### Hugging Face Spaces
 
-Set `OPENAI_BASE_URL`, `OPENAI_MODEL`, `OPENAI_API_KEY` (and optional `OPENAI_TEMPERATURE`, `OPENAI_TOP_P`, `OPENAI_SERVICE_TIER`) in the Vercel dashboard (Production + Preview). One `git push` deploys both frontend and backend.
+Push this repo to a Hugging Face Space with **Docker** as the SDK. The `README.md` YAML block configures the space automatically.
 
-For other static hosts, see notes below.
+Set `OPENAI_BASE_URL`, `OPENAI_MODEL`, `OPENAI_API_KEY` (and optional `OPENAI_TEMPERATURE`, `OPENAI_TOP_P`, `OPENAI_SERVICE_TIER`) as **Secrets** in the Space Settings.
 
-### Deploying the built `dist/` to static hosts
+### Docker (self-hosted)
 
-`npm run build` produces a static `dist/` folder with relative asset URLs (`base: './'`):
+```bash
+docker compose up --build
+```
 
-- **GitHub Pages** — push `dist/` to a `gh-pages` branch or sub-path.
-- **Amazon S3** — sync `dist/` to a bucket configured for static site hosting.
-- Any other static host.
+Or build and run manually:
 
-Note: the frontend will still need a backend to call `/api/generate`. Either:
-1. **Use Vercel Functions** (recommended) — deploy the whole project to Vercel.
-2. **Self-host the backend** — duplicate `api/generate.ts` logic and run it on your own server, then point the frontend's `api/generate` fetch to that URL.
+```bash
+docker build -t benedict-name-generator .
+docker run -p 7860:7860 --env-file .env benedict-name-generator
+```
 
 ---
 
@@ -106,19 +130,21 @@ Note: the frontend will still need a backend to call `/api/generate`. Either:
 
 ```
 .
-├── api/generate.ts          # Vercel function — POST handler, ~12 lines
-├── lib/                     # backend helpers (imported by api/generate.ts)
-│   ├── llm.ts               # fetch upstream + error mapping
-│   ├── prompt.ts            # buildSystemPrompt(), buildUserPrompt()
-│   ├── types.ts             # GeneratedName (backend copy)
-│   └── prompts/default.md   # system prompt asset, read via fs.readFileSync
-├── src/                     # frontend (vanilla TS, no framework)
-│   ├── lib/nameGenerator.ts # POST /api/generate, returns GeneratedName
-│   ├── constants.ts         # HISTORY_LIMIT
-│   ├── types.ts             # GeneratedName (frontend copy — duplicated, one type)
-│   ├── main.ts              # state + render loop
+├── server.ts                  # Single Node.js server (static + API)
+├── api/generate.ts            # Legacy Vercel handler (kept for reference)
+├── lib/                       # backend helpers (imported by server.ts)
+│   ├── llm.ts                 # fetch upstream + error mapping
+│   ├── prompt.ts              # buildSystemPrompt(), buildUserPrompt()
+│   ├── types.ts               # GeneratedName (backend copy)
+│   └── prompts/default.md     # system prompt asset, read via fs.readFileSync
+├── src/                       # frontend (vanilla TS, no framework)
+│   ├── lib/nameGenerator.ts   # POST /api/generate, returns GeneratedName
+│   ├── constants.ts           # HISTORY_LIMIT
+│   ├── types.ts               # GeneratedName (frontend copy — duplicated, one type)
+│   ├── main.ts                # state + render loop
 │   └── styles.css
-└── tests/generator.spec.ts  # Playwright; mocks **/api/generate
+├── public/                    # static assets (favicons, og-image)
+└── tests/generator.spec.ts    # Playwright; mocks **/api/generate
 ```
 
 ### Frontend ↔ backend contract
